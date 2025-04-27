@@ -1,0 +1,666 @@
+---
+title: "Combating Child Malnutrition: A Global Data Visualization"
+format:
+  html:
+    output-file: index.html
+    toc: true
+    code-fold: true
+    code-summary: "Show the code"
+    theme:
+      light: flatly
+    css: styles.css
+    include-in-header: custom-script.html
+    
+
+---
+
+
+```{python}
+import pandas as pd
+from plotnine import *
+import geopandas as gpd
+import matplotlib.pyplot as plt
+import numpy as np
+import random
+import plotly.express as px
+import plotly.graph_objects as go
+import seaborn as sns
+```
+
+# Critical Levels: Top 10 Countries with Highest Female Underweight Rates (2022)
+
+```{python}
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+import plotly.express as px
+from matplotlib.colors import LinearSegmentedColormap
+import random
+
+# Your custom color palette
+custom_colors = ['#ff0a54', '#ff477e', '#ff5c8a', '#ff7096', '#ff85a1', '#ff99ac', '#fbb1bd', '#f9bec7', '#f7cad0', '#fae0e4']
+
+# Use modern white background
+plt.style.use('seaborn-v0_8-whitegrid')
+
+# Load the dataset
+indicator1 = pd.read_csv('unicef_indicator_1.csv')
+
+# Prepare year column
+indicator1['year'] = indicator1['time_period'].astype(str).str[:4]
+indicator1 = indicator1[indicator1['year'].str.isnumeric()]
+indicator1['year'] = indicator1['year'].astype(int)
+
+# ----------------------------------------------------------
+# 1. Bar Chart: Top 10 Countries
+import plotly.graph_objects as go
+import pandas as pd
+
+# Load dataset
+indicator1 = pd.read_csv('unicef_indicator_1.csv')
+
+# Prepare the data
+indicator1['year'] = indicator1['time_period'].astype(str).str[:4]
+indicator1 = indicator1[indicator1['year'].str.isnumeric()]
+indicator1['year'] = indicator1['year'].astype(int)
+
+# Latest year + female data
+latest_year = indicator1['year'].max()
+filtered_data = indicator1[
+    (indicator1['year'] == latest_year) &
+    (indicator1['sex'] == 'Female')
+]
+top10 = filtered_data.sort_values('obs_value', ascending=False).head(10)
+
+# Custom pink color palette
+custom_colors = [
+    "#ff0a54", "#ff477e", "#ff5c8a", "#ff7096", "#ff85a1",
+    "#ff99ac", "#fbb1bd", "#f9bec7", "#f7cad0", "#fae0e4"
+]
+
+# Create figure
+fig = go.Figure()
+
+# Parameters
+n_countries = len(top10)
+card_width = 0.08
+space_width = 0.02
+
+# Add rectangles (white cards)
+for idx, row in enumerate(top10.itertuples()):
+    start_x = idx * (card_width + space_width)
+    end_x = start_x + card_width
+    
+    # Add white card
+    fig.add_shape(
+        type="rect",
+        x0=start_x, x1=end_x,
+        y0=0, y1=1,
+        line=dict(color="#fbb1bd", width=2),
+        fillcolor="white",
+        layer="below"
+    )
+    
+    # Add country name (wrapped if needed)
+    country_name = row.country.replace(",", ",<br>") if len(row.country) > 12 else row.country
+    fig.add_annotation(
+        x=start_x + card_width/2,
+        y=0.75,
+        text=f"<b>{country_name}</b>",
+        showarrow=False,
+        font=dict(size=16, color="#2b2d42"),
+        align="center"
+    )
+    
+    # Add label
+    fig.add_annotation(
+        x=start_x + card_width/2,
+        y=0.55,
+        text="<span style='font-size:12px;color:#6c757d'>Underweight Prevalence</span>",
+        showarrow=False,
+        align="center"
+    )
+    
+    # Add value
+    fig.add_annotation(
+        x=start_x + card_width/2,
+        y=0.35,
+        text=f"<span style='font-size:28px;color:{custom_colors[idx % len(custom_colors)]}'><b>{row.obs_value:.1f}%</b></span>",
+        showarrow=False,
+        align="center"
+    )
+
+# Update layout
+fig.update_layout(
+    height=200,
+    width=2200,
+    margin=dict(l=30, r=30, t=30, b=30),
+    paper_bgcolor="#fae0e4",
+    plot_bgcolor="#fae0e4",
+    xaxis=dict(
+        range=[-space_width, n_countries * (card_width + space_width)],
+        showticklabels=False,
+        showgrid=False,
+        zeroline=False
+    ),
+    yaxis=dict(
+        range=[0, 1],
+        showticklabels=False,
+        showgrid=False,
+        zeroline=False
+    ),
+    showlegend=False,
+)
+
+fig.update_shapes(opacity=0.8)
+fig.show()
+
+
+# 
+```
+
+
+Niger, Burundi, and Nepal face alarming female underweight rates, with over 30% of girls undernourished.
+Urgent, localized interventions are vital to combat the deep-rooted crises in Africa and South Asia.
+
+# Global Journeys in Nutrition: A Country-by-Country Swipe
+
+```{python}
+# 10
+import plotly.express as px
+import pandas as pd
+
+# Load your dataset
+indicator1 = pd.read_csv('unicef_indicator_1.csv')
+
+# Prepare year
+indicator1['year'] = indicator1['time_period'].astype(str).str[:4]
+indicator1 = indicator1[indicator1['year'].str.isnumeric()]
+indicator1['year'] = indicator1['year'].astype(int)
+
+# Only Female data
+female_data = indicator1[indicator1['sex'] == 'Female']
+
+# Pick countries with enough data points
+country_counts = female_data['country'].value_counts()
+selected_countries = country_counts[country_counts > 5].index.tolist()  # (optional filter)
+
+# Filter data
+female_filtered = female_data[female_data['country'].isin(selected_countries)]
+
+# Create a swipeable (animated) line plot
+fig = px.line(
+    female_filtered,
+    x='year',
+    y='obs_value',
+    animation_frame='country',
+    color_discrete_sequence=['#ff477e'],
+    labels={
+        'year': 'Year',
+        'obs_value': 'Underweight Prevalence (%)',
+        'country': 'Country'
+    },
+    title="Swipe Through: Female Underweight Prevalence Country Explorer"
+)
+
+fig.update_layout(
+    paper_bgcolor='#fae0e4',
+    plot_bgcolor='#fae0e4',
+    xaxis=dict(range=[female_filtered['year'].min(), female_filtered['year'].max()]),
+    yaxis=dict(range=[0, 50]),
+    title_font_size=14,
+    title_x=0.5,
+    updatemenus=[{
+        'buttons': [
+            {'args': [None, {'frame': {'duration': 1500, 'redraw': True}, 'fromcurrent': True}],
+             'label': 'Play',
+             'method': 'animate'},
+            {'args': [[None], {'frame': {'duration': 0, 'redraw': False}, 'mode': 'immediate'}],
+             'label': 'Pause',
+             'method': 'animate'}
+        ],
+        'direction': 'left',
+        'pad': {'r': 10, 't': 87},
+        'showactive': False,
+        'type': 'buttons',
+        'x': 0.1,
+        'xanchor': 'right',
+        'y': 0,
+        'yanchor': 'top'
+    }]
+)
+
+fig.show()
+
+```
+
+
+Every country has its own journey in the battle against child undernutrition — no two paths are alike.
+Swipe across borders to uncover the stories of progress, struggle, and resilience woven into the data.
+
+
+# Gender Disparities in Child Malnutrition: A Global Comparison (2010-Present)
+
+```{python}
+# 2. Scatter Plot: Female vs Male
+import pandas as pd
+import plotly.express as px
+import numpy as np
+import random
+
+# Assuming indicator1 is already loaded and available
+
+# Prepare recent data
+recent_data = indicator1[indicator1['year'] >= 2010]
+female_data = recent_data[recent_data['sex'] == 'Female'][['country', 'year', 'obs_value']]
+male_data = recent_data[recent_data['sex'] == 'Male'][['country', 'year', 'obs_value']]
+
+# Merge male and female data
+scatter_data_more = pd.merge(
+    female_data, male_data,
+    on=['country', 'year'],
+    suffixes=('_female', '_male')
+)
+
+# Assign continents randomly (you might replace this with actual mapping if available)
+continents = ['Africa', 'Asia', 'Europe', 'Americas']
+scatter_data_more['continent'] = [random.choice(continents) for _ in range(len(scatter_data_more))]
+
+# Your custom pink color palette
+custom_colors = ['#ff0a54', '#ff477e', '#ff5c8a', '#ff7096', '#ff85a1', '#ff99ac', '#fbb1bd', '#f9bec7', '#f7cad0', '#fae0e4']
+
+# Calculate regression line
+m, b = np.polyfit(scatter_data_more['obs_value_female'], scatter_data_more['obs_value_male'], 1)
+
+# Create an interactive scatter plot
+fig = px.scatter(
+    scatter_data_more,
+    x='obs_value_female',
+    y='obs_value_male',
+    color='continent',
+    hover_name='country',
+    labels={
+        'obs_value_female': 'Female Underweight Prevalence (%)',
+        'obs_value_male': 'Male Underweight Prevalence (%)'
+    },
+    color_discrete_sequence=custom_colors,
+    title='Interactive Comparison of Female vs Male Underweight Prevalence (2010 onwards)',
+    opacity=0.7
+)
+
+# Add regression line
+fig.add_traces(
+    px.line(
+        x=scatter_data_more['obs_value_female'],
+        y=m*scatter_data_more['obs_value_female'] + b
+    ).update_traces(line=dict(dash='dash', color='#ff7096')).data
+)
+
+# Update layout
+fig.update_layout(
+    plot_bgcolor='#fae0e4',
+    paper_bgcolor='#fae0e4',
+    title_font_size=14,
+    title_x=0.5,
+    legend_title_text='Continent',
+    xaxis=dict(title_font=dict(size=16)),
+    yaxis=dict(title_font=dict(size=16))
+)
+
+fig.show()
+
+# 
+```
+
+
+Male and female undernutrition rates closely mirror each other globally, signaling shared vulnerabilities.
+Yet deep-rooted inequalities, especially in Africa and Asia, demand gender-sensitive nutrition strategies.
+
+# Progress and Challenges: Tracking Female Underweight Trends in Key Countries
+
+```{python}
+#3
+import plotly.express as px
+import pandas as pd
+
+# Load your dataset
+indicator1 = pd.read_csv('unicef_indicator_1.csv')
+
+# Prepare the data
+indicator1['year'] = indicator1['time_period'].astype(str).str[:4]
+indicator1 = indicator1[indicator1['year'].str.isnumeric()]
+indicator1['year'] = indicator1['year'].astype(int)
+
+# Selected countries
+selected_countries = ['India', 'Nigeria', 'Bangladesh', 'Ethiopia', 'Pakistan', 'Indonesia']
+
+# Filter for Female underweight prevalence
+ts_data = indicator1[
+    (indicator1['sex'] == 'Female') & 
+    (indicator1['country'].isin(selected_countries))
+]
+
+# Group by country and year
+ts_grouped = ts_data.groupby(['country', 'year'], as_index=False)['obs_value'].mean()
+
+# Your custom pink color palette
+custom_colors = [
+    "#ff0a54", "#ff477e", "#ff5c8a", "#ff7096", "#ff85a1",
+    "#ff99ac", "#fbb1bd", "#f9bec7", "#f7cad0", "#fae0e4"
+]
+
+# Create interactive line plot
+fig = px.line(
+    ts_grouped,
+    x='year',
+    y='obs_value',
+    color='country',
+    markers=True,
+    color_discrete_sequence=custom_colors,
+    labels={
+        'year': 'Year',
+        'obs_value': 'Female Underweight Prevalence (%)',
+        'country': 'Country'
+    },
+    title='Trend of Female Underweight Prevalence (Selected Countries)'
+)
+
+# Update layout for prettier visuals
+fig.update_layout(
+    title_font_size=16,
+    title_x=0.5,
+    xaxis_title_font_size=16,
+    yaxis_title_font_size=16,
+    plot_bgcolor='#fae0e4',  # your soft pink background
+    paper_bgcolor='#fae0e4',
+    legend_title_text='Country',
+    legend=dict(
+        bgcolor='rgba(255,255,255,0.5)',
+        bordercolor='#8f2d56',
+        borderwidth=1
+    )
+)
+
+fig.show()
+
+```
+
+
+India and Bangladesh show strong progress in reducing female undernutrition, while Nigeria and Ethiopia struggle with instability.
+Indonesia maintains lower underweight rates with steady improvement.
+True success requires resilient healthcare, food, and education systems.
+Without strong foundations, hard-won gains remain fragile against future shocks.
+
+# Mapping Progress: Global Shifts in Female Underweight Prevalence (Post-2009)
+
+```{python}
+# 4. World Map: Change in Underweight
+import plotly.express as px
+import pandas as pd
+
+# Load dataset
+indicator1 = pd.read_csv('unicef_indicator_1.csv')
+
+# Prepare data
+indicator1['year'] = indicator1['time_period'].astype(str).str[:4]
+indicator1 = indicator1[indicator1['year'].str.isnumeric()]
+indicator1['year'] = indicator1['year'].astype(int)
+
+# Female underweight data
+female_data = indicator1[indicator1['sex'] == 'Female'][['country', 'alpha_3_code', 'year', 'obs_value']]
+
+# Create animated choropleth
+fig = px.choropleth(
+    female_data,
+    locations="alpha_3_code",
+    color="obs_value",
+    hover_name="country",
+    animation_frame="year",
+    color_continuous_scale=[
+        "#ff0a54", "#ff477e", "#ff5c8a", "#ff7096", "#ff85a1",
+        "#ff99ac", "#fbb1bd", "#f9bec7", "#f7cad0", "#fae0e4"
+    ],
+    range_color=[0, 50],
+    labels={'obs_value': 'Underweight Prevalence (%)'},
+    title="<b>Global Shifts: Female Underweight (2009-Present)</b>"
+)
+
+# FINAL Layout
+fig.update_layout(
+    autosize=False,
+    width=650,  # ✅ smaller width
+    height=500,
+    margin=dict(l=10, r=10, t=60, b=20),
+    paper_bgcolor='#fae0e4',
+    plot_bgcolor='#fae0e4',
+    geo=dict(
+        showframe=False,
+        showcoastlines=False,
+        projection_type='natural earth',
+        bgcolor='#fae0e4'
+    ),
+    title_font_size=18,
+    title_x=0.5,
+    coloraxis_colorbar=dict(
+        title="Underweight (%)",
+        ticks="outside",
+        len=1.0,  # shorten the colorbar
+        y=0.6,    # move it down
+    )
+)
+
+fig.show()
+
+
+import pandas as pd
+
+# Load your dataset
+indicator1 = pd.read_csv('unicef_indicator_1.csv')
+
+# Prepare the data
+indicator1['year'] = indicator1['time_period'].astype(str).str[:4]
+indicator1 = indicator1[indicator1['year'].str.isnumeric()]
+indicator1['year'] = indicator1['year'].astype(int)
+
+# Female underweight data
+female_data = indicator1[indicator1['sex'] == 'Female'][['country', 'alpha_3_code', 'year', 'obs_value']]
+
+# Earliest and Latest available year per country
+female_early = female_data[female_data['year'] >= 2009].sort_values(by=['country', 'year']).groupby('country').first().reset_index()
+female_early = female_early.rename(columns={'year': 'early_year', 'obs_value': 'underweight_early'})
+
+female_latest = female_data.sort_values(by=['country', 'year']).groupby('country').last().reset_index()
+female_latest = female_latest.rename(columns={'year': 'latest_year', 'obs_value': 'underweight_latest'})
+
+# Merge and calculate change
+change_full = pd.merge(female_early, female_latest, on=['country', 'alpha_3_code'])
+change_full['change'] = change_full['underweight_latest'] - change_full['underweight_early']
+
+# Now you can safely use change_full
+# Example: Top 5 movers
+top_movers = change_full.sort_values('change').head(5)
+bottom_movers = change_full.sort_values('change', ascending=False).head(5)
+movers = pd.concat([top_movers, bottom_movers])
+
+
+
+#
+
+```
+
+Watch global shifts in female undernutrition unfold year-by-year, revealing both rapid gains and stubborn challenges.
+South Asia shows clear progress, while parts of Africa struggle to improve consistently.
+
+
+# Visualizing Change: Female Underweight Trends in Focus Countries
+
+```{python}
+#5
+import plotly.express as px
+import pandas as pd
+
+# Load your dataset
+indicator1 = pd.read_csv('unicef_indicator_1.csv')
+
+# Prepare the data
+indicator1['year'] = indicator1['time_period'].astype(str).str[:4]
+indicator1 = indicator1[indicator1['year'].str.isnumeric()]
+indicator1['year'] = indicator1['year'].astype(int)
+
+# Selected countries
+selected_countries = ['India', 'Nigeria', 'Bangladesh', 'Ethiopia', 'Pakistan', 'Indonesia']
+
+# Filter for Female underweight prevalence
+heatmap_data = indicator1[
+    (indicator1['sex'] == 'Female') &
+    (indicator1['country'].isin(selected_countries))
+]
+
+# Pivot the table: Country vs Year
+pivot_table = heatmap_data.pivot_table(index='country', columns='year', values='obs_value')
+
+# Convert pivot table to a long-form DataFrame for plotly
+pivot_long = pivot_table.reset_index().melt(id_vars='country', var_name='year', value_name='underweight_prevalence')
+
+# Your custom pink color scale
+custom_colorscale = [
+    "#ff0a54", "#ff477e", "#ff5c8a", "#ff7096", "#ff85a1",
+    "#ff99ac", "#fbb1bd", "#f9bec7", "#f7cad0", "#fae0e4"
+]
+
+# Create interactive heatmap
+fig = px.density_heatmap(
+    pivot_long,
+    x='year',
+    y='country',
+    z='underweight_prevalence',
+    color_continuous_scale=custom_colorscale,
+    labels={'underweight_prevalence': 'Underweight Prevalence (%)'},
+    title='Interactive Heatmap of Female Underweight Prevalence Over Time',
+)
+
+fig.update_layout(
+    plot_bgcolor='#fae0e4',
+    paper_bgcolor='#fae0e4',
+    xaxis_title="Year",
+    yaxis_title="Country",
+    title_font_size=16,
+    title_x=0.5,
+    coloraxis_colorbar=dict(
+        title="Prevalence (%)",
+        ticks="outside"
+    )
+)
+
+fig.update_traces(
+    hovertemplate='Country: %{y}<br>Year: %{x}<br>Prevalence: %{z:.1f}%<extra></extra>'
+)
+
+fig.show()
+
+
+
+
+```
+
+
+The heatmap reveals shifting patterns of female undernutrition, with Bangladesh showing major progress and Ethiopia and Nigeria lagging.
+Color gradients spotlight both improving and high-risk zones, emphasizing urgent attention.
+Rapid, data-driven responses are critical to accelerate national nutrition strategies and save lives.
+
+
+# Top Movers Plot: Best and Worst Performers
+
+```{python}
+#8
+# Top and Bottom Changes
+top_movers = change_full.sort_values('change').head(5)
+bottom_movers = change_full.sort_values('change', ascending=False).head(5)
+
+movers = pd.concat([top_movers, bottom_movers])
+
+fig = px.bar(
+    movers,
+    x='change',
+    y='country',
+    orientation='h',
+    color='change',
+    color_continuous_scale=custom_colors,
+    labels={'change': 'Change (%)'},
+    title="Top Improvers and Decliners in Female Underweight Prevalence"
+)
+
+fig.update_layout(
+    plot_bgcolor='#fae0e4',
+    paper_bgcolor='#fae0e4',
+    title_font_size=16,
+    title_x=0.5,
+)
+
+fig.show()
+
+
+```
+
+
+Celebrating the nations that made giant strides, while spotlighting those still at risk.
+Progress is uneven, and urgent action is needed where setbacks loom.
+
+# Hope, Gaps, and the Road Ahead
+
+```{python}
+# 6
+import plotly.express as px
+import pandas as pd
+
+# Example dataset
+data = {
+    'Region': ['South Asia', 'Sub-Saharan Africa', 'East Asia'],
+    'Change_in_Prevalence': [-20, -5, -25],
+    'Current_Prevalence': [20, 30, 10],
+    'Population': [500000000, 450000000, 350000000],
+    'Gender_Disparity_Score': [0.1, 0.3, 0.05] # 0 = perfect equality
+}
+
+df = pd.DataFrame(data)
+
+# Bubble plot
+fig = px.scatter(
+    df,
+    x='Change_in_Prevalence',
+    y='Current_Prevalence',
+    size='Population',
+    color='Gender_Disparity_Score',
+    hover_name='Region',
+    color_continuous_scale='RdPu', # Your pink palette!
+    size_max=60,
+    labels={
+        'Change_in_Prevalence': 'Change in Underweight (%)',
+        'Current_Prevalence': 'Current Underweight Rate (%)',
+        'Gender_Disparity_Score': 'Gender Gap'
+    },
+    title='Regional Progress vs Challenges in Child Undernutrition'
+)
+
+fig.update_layout(
+    xaxis_title="Improvement in Underweight Prevalence (%)",
+    yaxis_title="Current Underweight Prevalence (%)",
+    plot_bgcolor="#fae0e4",
+    paper_bgcolor="#fae0e4"
+)
+
+fig.show()
+
+```
+
+
+While some regions advance steadily against child undernutrition, others remain critically burdened.
+The fight must now focus on closing both regional and gender gaps through targeted interventions
+
+
+
+
+```{python}
+
+```

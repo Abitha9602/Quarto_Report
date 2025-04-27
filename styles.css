@@ -1,0 +1,130 @@
+body {
+    background-color: #fae0e4; /* Very light pink background */
+  }
+  
+  main {
+    background-color: lch(53.72% 54.03 26.93); /* Main content area can be white */
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  
+  .navbar, .sidebar {
+    background-color: lch(85.12% 12.33 20.3) !important; /* Sidebar or navbar if present */
+  }
+  html, body {
+    background-color: lch(78.2% 24.68 9.23);  /* your light pink color */
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  
+  main {
+    background-color: hwb(0 56% 7%);  /* main content (white card) */
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  
+  .navbar, .sidebar {
+    background-color: hsl(352, 74%, 88%) !important; /* Sidebar or navbar color */
+  }
+  html, body {
+    background-color: #fae0e4;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  
+  main {
+    background-color: lab(71.13% 32.28 13.56);
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  
+  .navbar, .sidebar {
+    background-color: #f7cad0 !important;
+  }
+  
+  /* Highlight Title */
+  h1.title {
+    color: #ff0a54;
+    background-color: #f9bec7;
+    padding: 1rem;
+    border-radius: 10px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.8rem;
+  }
+
+  
+/*2nd BG*/  
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: #fae0e4; /* Solid soft pink */
+    font-family: 'Helvetica Neue', sans-serif;
+  }
+  
+  main {
+    background: #f5adadf2; /* Soft white floating card */
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+    width: 90%;
+    max-width: 2500px;
+    margin: 3rem auto;
+  }
+  
+  h1.title {
+    color: #ff0a54;
+    background-color: hsl(343, 56%, 83%);
+    text-align: center;
+    font-weight: bold;
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+  
+  .navbar, .sidebar {
+    background-color: #f9bec7 !important;
+    color: hsl(335, 69%, 34%);
+  }
+  
+  img, .plot {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  body {
+    background: linear-gradient(135deg, #f7cad0, #fae0e4);
+    background-size: 400% 400%;
+    animation: gradientWave 15s ease infinite;
+  }
+  
+  @keyframes gradientWave {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  
+  /*BG pic*/
+
+  body {
+    background: #fae0e4; /* Soft pink fallback */
+    position: relative;
+}
+
+body::before {
+    content: "";
+    background: url('Background.png') no-repeat center center fixed;
+    background-size: cover;
+    opacity: 0.08; /* Adjust this for watermark effect */
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    position: fixed;
+    z-index: -1;
+}

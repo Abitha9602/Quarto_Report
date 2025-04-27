@@ -1,0 +1,52 @@
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const canvas = document.createElement('canvas');
+        canvas.style.position = 'fixed';
+        canvas.style.top = 0;
+        canvas.style.left = 0;
+        canvas.style.pointerEvents = 'none';
+        canvas.style.zIndex = 1;
+        document.body.appendChild(canvas);
+    
+        const ctx = canvas.getContext('2d');
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+    
+        window.addEventListener('resize', function() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        });
+    
+        let trails = [];
+    
+        document.addEventListener('mousemove', function(e) {
+            trails.push({
+                x: e.clientX,
+                y: e.clientY,
+                alpha: 1.0
+            });
+        });
+    
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
+            trails.forEach(function(trail, index) {
+                ctx.beginPath();
+                ctx.arc(trail.x, trail.y, 6, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 10, 84, ${trail.alpha})`; // Bright pink trail
+                ctx.fill();
+                trail.alpha -= 0.02;
+                if (trail.alpha <= 0) {
+                    trails.splice(index, 1);
+                }
+            });
+            requestAnimationFrame(draw);
+        }
+    
+        draw();
+    });
+    </script>
+    
